@@ -64,7 +64,7 @@ const VP8: VideoParameter = VideoParameter {
 };
 
 const H264: VideoParameter = VideoParameter {
-    encoder: "x264enc tune=zerolatency",
+    encoder: "vaapi264enc",
     encoding_name: "H264",
     payloader: "rtph264pay aggregate-mode=zero-latency",
 };
@@ -85,6 +85,7 @@ impl std::str::FromStr for VideoParameter {
 }
 
 const DEFAULT_SERVER: &str = "wss://janus.3exp8.network:8989";
+
 #[derive(Debug, StructOpt)]
 pub struct Args {
     #[structopt(short, long, default_value = DEFAULT_SERVER)]

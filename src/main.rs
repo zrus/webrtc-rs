@@ -68,7 +68,9 @@ impl App {
     fn new() -> Result<Self, anyhow::Error> {
         let pipeline = gst::parse_launch(
             &"webrtcbin name=webrtcbin stun-server=stun://stun.l.google.com:19302 \
-             videotestsrc pattern=ball ! videoconvert ! queue name=vqueue"
+             rtspsrc location=rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4 ! queue ! 
+             capsfilter caps=\"application/x-rtp,pt=96,media=video\" ! rtph264depay ! h264parse ! 
+             vaapih264dec ! queue ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! queue name=vqueue"
                 .to_string(),
         )?;
 
