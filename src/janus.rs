@@ -84,15 +84,16 @@ impl std::str::FromStr for VideoParameter {
     }
 }
 
+const DEFAULT_SERVER: &str = "wss://janus.3exp8.network:8989";
 #[derive(Debug, StructOpt)]
 pub struct Args {
-    #[structopt(short, long, default_value = "wss://janus.conf.meetecho.com/ws:8989")]
+    #[structopt(short, long, default_value = DEFAULT_SERVER)]
     server: String,
     #[structopt(short, long, default_value = "1234")]
     room_id: u32,
     #[structopt(short, long, default_value = "1234")]
     feed_id: u32,
-    #[structopt(short, long, default_value = "vp8")]
+    #[structopt(short, long, default_value = "h264")]
     webrtc_video_codec: VideoParameter,
 }
 
