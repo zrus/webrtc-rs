@@ -485,7 +485,7 @@ impl JanusGateway {
 
         let webrtc_codec = &args.webrtc_video_codec;
         let bin_description = &format!(
-            "{encoder} name=encoder ! {payloader} ! queue ! capsfilter name=webrtc-vsink caps=\"application/x-rtp,media=video,encoding-name={encoding_name},payload=96\"",
+            "{encoder} name=encoder ! {payloader} ! queue ! capsfilter name=webrtc-vsink caps=\"application/x-rtp,media=video,encoding-name={encoding_name},payload=96\" ! webrtcbin.",
             encoder=webrtc_codec.encoder, payloader=webrtc_codec.payloader,
             encoding_name=webrtc_codec.encoding_name
         );

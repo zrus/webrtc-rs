@@ -172,7 +172,7 @@ fn check_plugins() -> Result<(), anyhow::Error> {
 
 async fn async_main() -> Result<(), anyhow::Error> {
     gst::init()?;
-    // check_plugins()?;
+    check_plugins()?;
     let app = App::new()?;
     app.run().await?;
     Ok(())
