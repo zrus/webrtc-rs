@@ -64,7 +64,7 @@ const VP8: VideoParameter = VideoParameter {
 };
 
 const H264: VideoParameter = VideoParameter {
-    encoder: "vaapi264enc",
+    encoder: "vaapih264enc",
     encoding_name: "H264",
     payloader: "rtph264pay aggregate-mode=zero-latency",
 };
