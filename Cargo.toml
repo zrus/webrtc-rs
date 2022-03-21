@@ -1,0 +1,24 @@
+[package]
+name = "webrtc"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+futures = "*"
+tokio = { version = "*", features = ["full"] }
+tokio-util = "*"
+structopt = { version = "*", default-features = false }
+anyhow = "*"
+rand = "*"
+# async-tungstenite = { version = "*", features = ["async-std-runtime", "async-native-tls"] }
+async-tungstenite = { version = "*", features = ["gio-runtime"] }
+http = "*"
+gst = { package = "gstreamer", version = "*"}
+gst-webrtc = { package = "gstreamer-webrtc", version = "*" }
+gst-sdp = { package = "gstreamer-sdp", version = "*" }
+log = "*"
+serde = "*"
+serde_derive = "*"
+serde_json = "*"
