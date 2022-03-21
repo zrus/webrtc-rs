@@ -1240,6 +1240,8 @@ dependencies = [
  "anyhow",
  "async-tungstenite",
  "futures",
+ "gio",
+ "glib 0.9.3",
  "gstreamer",
  "gstreamer-sdp",
  "gstreamer-webrtc",
