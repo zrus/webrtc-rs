@@ -1,3 +1,24 @@
+// GStreamer
+//
+// Copyright (C) 2018 maxmcd <max.t.mcdonnell@gmail.com>
+// Copyright (C) 2019 Sebastian Dröge <sebastian@centricular.com>
+// Copyright (C) 2020 Philippe Normand <philn@igalia.com>
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Library General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Library General Public License for more details.
+//
+// You should have received a copy of the GNU Library General Public
+// License along with this library; if not, write to the
+// Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+// Boston, MA 02110-1301, USA.
+
 use {
     anyhow::{anyhow, bail, Context},
     async_tungstenite::{gio::connect_async, tungstenite},
@@ -14,8 +35,6 @@ use {
     structopt::StructOpt,
     tungstenite::Message as WsMessage,
 };
-
-const DEFAULT_SERVER: &str = "wss://janus.3exp8.network:8989";
 
 // upgrade weak reference or return
 #[macro_export]
@@ -67,13 +86,13 @@ impl std::str::FromStr for VideoParameter {
 
 #[derive(Debug, StructOpt)]
 pub struct Args {
-    #[structopt(short, long, default_value = DEFAULT_SERVER)]
+    #[structopt(short, long, default_value = "wss://janus.conf.meetecho.com/ws:8989")]
     server: String,
     #[structopt(short, long, default_value = "1234")]
     room_id: u32,
     #[structopt(short, long, default_value = "1234")]
     feed_id: u32,
-    #[structopt(short, long, default_value = "h264")]
+    #[structopt(short, long, default_value = "vp8")]
     webrtc_video_codec: VideoParameter,
 }
 

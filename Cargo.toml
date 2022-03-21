@@ -6,22 +6,21 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-futures = "*"
-tokio = { version = "*", features = ["full"] }
-tokio-util = "*"
-structopt = { version = "*", default-features = false }
-anyhow = "*"
-rand = "*"
-# async-tungstenite = { version = "*", features = ["async-std-runtime", "async-native-tls"] }
-async-tungstenite = { version = "*", features = ["gio-runtime"] }
-http = "*"
-gst = { package = "gstreamer", version = "*"}
-gst-webrtc = { package = "gstreamer-webrtc", version = "*" }
-gst-sdp = { package = "gstreamer-sdp", version = "*" }
-log = "*"
-serde = "*"
-serde_derive = "*"
-serde_json = "*"
-glib = "*"
-gio = "*"
-env_logger = "*"
+futures = "0.3"
+structopt = { version = "0.3", default-features = false }
+anyhow = "1"
+url = "2"
+rand = "0.7"
+async-tungstenite = { version = "0.14", features = ["gio-runtime"] }
+gst = { package = "gstreamer", version = "0.17", features = ["v1_14"] }
+gst-webrtc = { package = "gstreamer-webrtc", version = "0.17" }
+gst-sdp = { package = "gstreamer-sdp", version = "0.17", features = ["v1_14"] }
+serde = "1"
+serde_derive = "1"
+serde_json = "1.0.53"
+http = "0.2"
+glib = "0.14"
+gio = "0.14"
+log = "0.4.8"
+env_logger = "0.7.1"
+
