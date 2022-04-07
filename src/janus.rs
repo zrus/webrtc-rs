@@ -412,6 +412,7 @@ pub struct JanusGateway {
 impl JanusGateway {
     pub async fn new(pipeline: gst::Bin) -> Result<Self, anyhow::Error> {
         let args = Args::from_args();
+        println!("SERVER: {:?}", args.server);
         let request = Request::builder()
             .uri(&args.server)
             .header("Sec-WebSocket-Protocol", "janus-protocol")
