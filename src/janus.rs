@@ -474,7 +474,7 @@ impl JanusGateway {
                     "request": "join",
                     "ptype": "publisher",
                     "room": args.room_id,
-                    "display": args.feed_id,
+                    "id": args.feed_id,
                 },
             })
             .to_string(),
