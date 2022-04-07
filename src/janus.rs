@@ -493,6 +493,15 @@ impl JanusGateway {
 
         println!("JOIN ROOM MSG: {:?}", json_msg);
 
+        let msg = ws
+            .next()
+            .await
+            .ok_or_else(|| anyhow!("didn't receive anything"))??;
+        let payload = msg.to_text()?;
+        let json_msg: JsonReply = serde_json::from_str(payload)?;
+
+        println!("NEXT MSG: {:?}", json_msg);
+
         let webrtcbin = pipeline.by_name("webrtcbin").expect("can't find webrtcbin");
 
         let webrtc_codec = &args.webrtc_video_codec;
