@@ -84,7 +84,7 @@ impl std::str::FromStr for VideoParameter {
     }
 }
 
-const DEFAULT_SERVER: &str = "wss://janus.3exp8.network:8989";
+const DEFAULT_SERVER: &str = "wss://janus.3exp8.network:8089";
 
 #[derive(Debug, StructOpt)]
 pub struct Args {
@@ -474,7 +474,7 @@ impl JanusGateway {
                     "request": "join",
                     "ptype": "publisher",
                     "room": args.room_id,
-                    "id": args.feed_id,
+                    "display": args.feed_id,
                 },
             })
             .to_string(),
