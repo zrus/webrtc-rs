@@ -84,7 +84,7 @@ impl std::str::FromStr for VideoParameter {
     }
 }
 
-const DEFAULT_SERVER: &str = "wss://janus.3exp8.network:8089";
+const DEFAULT_SERVER: &str = "wss://janus.3exp8.network:8989";
 
 #[derive(Debug, StructOpt)]
 pub struct Args {
