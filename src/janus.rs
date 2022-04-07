@@ -263,6 +263,8 @@ impl Peer {
             })
             .to_string(),
         );
+
+        println!("CREATE MSG: {:?}", msg);
         self.send_msg_tx
             .lock()
             .expect("Invalid message sender")
@@ -281,10 +283,7 @@ impl Peer {
         self.webrtcbin
             .emit_by_name("set-local-description", &[&answer, &None::<gst::Promise>])?;
 
-        info!(
-            "sending SDP answer to peer: {:?}",
-            answer.sdp().as_text()
-        );
+        info!("sending SDP answer to peer: {:?}", answer.sdp().as_text());
 
         Ok(())
     }
@@ -480,9 +479,7 @@ impl JanusGateway {
         );
         ws.send(msg).await?;
 
-        let webrtcbin = pipeline
-            .by_name("webrtcbin")
-            .expect("can't find webrtcbin");
+        let webrtcbin = pipeline.by_name("webrtcbin").expect("can't find webrtcbin");
 
         let webrtc_codec = &args.webrtc_video_codec;
         let bin_description = &format!(
@@ -517,16 +514,18 @@ impl JanusGateway {
         let vsink = encode_bin
             .by_name("webrtc-vsink")
             .expect("No webrtc-vsink found");
-        let srcpad = vsink
-            .static_pad("src")
-            .expect("Element without src pad");
+        let srcpad = vsink.static_pad("src").expect("Element without src pad");
         if let Ok(webrtc_ghost_pad) = gst::GhostPad::with_target(Some("webrtc_video_src"), &srcpad)
         {
             encode_bin.add_pad(&webrtc_ghost_pad)?;
             webrtc_ghost_pad.link(&sinkpad2)?;
         }
 
-        if let Some(transceiver) = webrtcbin.emit_by_name("get-transceiver", &[&0.to_value()]).unwrap().and_then(|val| val.get::<glib::Object>().ok()) {
+        if let Some(transceiver) = webrtcbin
+            .emit_by_name("get-transceiver", &[&0.to_value()])
+            .unwrap()
+            .and_then(|val| val.get::<glib::Object>().ok())
+        {
             transceiver.set_property("do-nack", &false.to_value())?;
         }
 
@@ -564,12 +563,8 @@ impl JanusGateway {
         let peer_clone = peer.downgrade();
         peer.webrtcbin
             .connect("on-ice-candidate", false, move |values| {
-                let mlineindex = values[1]
-                    .get::<u32>()
-                    .expect("Invalid type");
-                let candidate = values[2]
-                    .get::<String>()
-                    .expect("Invalid type");
+                let mlineindex = values[1].get::<u32>().expect("Invalid type");
+                let candidate = values[2].get::<String>().expect("Invalid type");
 
                 let peer = upgrade_weak!(peer_clone, None);
                 if let Err(err) = peer.on_ice_candidate(mlineindex, candidate) {
