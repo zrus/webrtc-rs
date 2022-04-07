@@ -435,7 +435,7 @@ impl JanusGateway {
             .ok_or_else(|| anyhow!("didn't receive anything"))??;
         let payload = msg.to_text()?;
         let json_msg: JsonReply = serde_json::from_str(payload)?;
-        println!("JSON MSG: {:?}", json_msg);
+        // println!("JSON MSG: {:?}", json_msg);
         assert_eq!(json_msg.base.janus, "success");
         assert_eq!(json_msg.base.transaction, Some(transaction));
         let session_id = json_msg.data.expect("no session id").id;
@@ -479,6 +479,15 @@ impl JanusGateway {
             .to_string(),
         );
         ws.send(msg).await?;
+
+        let msg = ws
+            .next()
+            .await
+            .ok_or_else(|| anyhow!("didn't receive anything"))??;
+        let payload = msg.to_text()?;
+        let json_msg: JsonReply = serde_json::from_str(payload)?;
+
+        println!("JSON MSG: {:?}", json_msg);
 
         let webrtcbin = pipeline.by_name("webrtcbin").expect("can't find webrtcbin");
 
