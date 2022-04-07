@@ -251,7 +251,7 @@ impl Peer {
                  "session_id": self.handle.session_id,
                  "handle_id": self.handle.id,
                  "body": {
-                     "request": "publish",
+                     "request": "configure",
                      "audio": true,
                      "video": true,
                  },
@@ -599,6 +599,15 @@ impl JanusGateway {
 
                 None
             })?;
+
+        let msg = ws
+            .next()
+            .await
+            .ok_or_else(|| anyhow!("didn't receive anything"))??;
+        let payload = msg.to_text()?;
+        let json_msg: JsonReply = serde_json::from_str(payload)?;
+
+        println!(" MSG: {:?}", json_msg);
 
         // Split the websocket into the Sink and Stream
         let (ws_sink, ws_stream) = ws.split();
