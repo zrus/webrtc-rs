@@ -264,7 +264,6 @@ impl Peer {
             .to_string(),
         );
 
-        println!("CREATE MSG: {:?}", msg);
         self.send_msg_tx
             .lock()
             .expect("Invalid message sender")
