@@ -147,7 +147,7 @@ fn check_plugins() -> Result<(), anyhow::Error> {
         "videotestsrc",
         "videoconvert",
         "autodetect",
-        "vpx",
+        // "vpx",
         "webrtc",
         "nice",
         "dtls",
