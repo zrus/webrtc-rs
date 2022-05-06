@@ -436,7 +436,7 @@ impl JanusGateway {
             .ok_or_else(|| anyhow!("didn't receive anything"))??;
 
         let payload = msg.to_text()?;
-        println!("Created: {:?}", payload);
+        println!("Created: {}", payload);
         let json_msg: JsonReply = serde_json::from_str(payload)?;
         assert_eq!(json_msg.base.janus, "success");
         assert_eq!(json_msg.base.transaction, Some(transaction));
@@ -459,7 +459,7 @@ impl JanusGateway {
             .await
             .ok_or_else(|| anyhow!("didn't receive anything"))??;
         let payload = msg.to_text()?;
-        println!("Attach: {:?}", payload);
+        println!("Attach: {}", payload);
         let json_msg: JsonReply = serde_json::from_str(payload)?;
         assert_eq!(json_msg.base.janus, "success");
         assert_eq!(json_msg.base.transaction, Some(transaction));
@@ -487,7 +487,7 @@ impl JanusGateway {
             .await
             .ok_or_else(|| anyhow!("didn't receive anything"))??;
         let payload = msg.to_text()?;
-        println!("Join: {:?}", payload);
+        println!("Join: {}", payload);
 
         let webrtcbin = pipeline
             .by_name("webrtcbin")
