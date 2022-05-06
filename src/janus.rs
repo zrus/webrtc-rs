@@ -64,7 +64,8 @@ const VP8: VideoParameter = VideoParameter {
 };
 
 const H264: VideoParameter = VideoParameter {
-    encoder: "vaapih264enc",
+    // encoder: "vaapih264enc",
+    encoder: "x264enc tune=zerolatency",
     encoding_name: "H264",
     payloader: "rtph264pay aggregate-mode=zero-latency",
 };
@@ -529,6 +530,8 @@ impl JanusGateway {
         if let Some(transceiver) = webrtcbin.emit_by_name("get-transceiver", &[&0.to_value()]).unwrap().and_then(|val| val.get::<glib::Object>().ok()) {
             transceiver.set_property("do-nack", &false.to_value())?;
         }
+
+        webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
 
         let (send_ws_msg_tx, send_ws_msg_rx) = mpsc::unbounded::<WsMessage>();
 
