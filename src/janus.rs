@@ -482,7 +482,7 @@ impl JanusGateway {
         ws.send(msg).await?;
 
         let mut sink_index = 0;
-        let webrtc_bin = gst::parse_bin_from_description("webrtcbin name=web", false)?;
+        let webrtc_bin = gst::parse_bin_from_description("webrtcbin name=webrtcbin", false)?;
         pipeline.add(&webrtc_bin)?;
 
         let webrtcbin = pipeline
