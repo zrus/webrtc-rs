@@ -66,11 +66,18 @@ impl App {
     }
 
     fn new() -> Result<Self, anyhow::Error> {
+        // let pipeline = gst::parse_launch(
+        //     &"webrtcbin name=webrtcbin stun-server=stun://stun.l.google.com:19302 \
+        //     rtspsrc location=rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4 ! capsfilter caps=\"application/x-rtp,pt=96,media=video,encodeing-name=H264\" ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! queue name=vqueue"
+        //         .to_string(),
+        // )?;
+
         let pipeline = gst::parse_launch(
             &"webrtcbin name=webrtcbin stun-server=stun://stun.l.google.com:19302 \
-            rtspsrc location=rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4 ! capsfilter caps=\"application/x-rtp,pt=96,media=video,encodeing-name=H264\" ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! queue name=vqueue"
+             videotestsrc pattern=ball ! videoconvert ! queue name=vqueue"
                 .to_string(),
         )?;
+
 
         let pipeline = pipeline
             .downcast::<gst::Pipeline>()
