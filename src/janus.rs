@@ -50,40 +50,6 @@ macro_rules! upgrade_weak {
     };
 }
 
-#[derive(Debug)]
-struct VideoParameter {
-    encoder: &'static str,
-    encoding_name: &'static str,
-    payloader: &'static str,
-}
-
-const VP8: VideoParameter = VideoParameter {
-    encoder: "vp8enc target-bitrate=100000 overshoot=25 undershoot=100 deadline=33000 keyframe-max-dist=1",
-    encoding_name: "VP8",
-    payloader: "rtpvp8pay picture-id-mode=2"
-};
-
-const H264: VideoParameter = VideoParameter {
-    encoder: "x264enc",
-    encoding_name: "H264",
-    payloader: "rtph264pay aggregate-mode=zero-latency",
-};
-
-impl std::str::FromStr for VideoParameter {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "vp8" => Ok(VP8),
-            "h264" => Ok(H264),
-            _ => Err(anyhow!(
-                "Invalid video parameter: {}. Use either vp8 or h264",
-                s
-            )),
-        }
-    }
-}
-
 const DEFAULT_SERVER: &str = "wss://janus.3exp8.network:8989";
 
 #[derive(Debug, StructOpt)]
@@ -92,10 +58,8 @@ pub struct Args {
     server: String,
     #[structopt(short, long, default_value = "1234")]
     room_id: u32,
-    #[structopt(short, long, default_value = "1234")]
+    #[structopt(short, long, default_value = "740119")]
     feed_id: u32,
-    #[structopt(short, long, default_value = "h264")]
-    webrtc_video_codec: VideoParameter,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -281,10 +245,7 @@ impl Peer {
         self.webrtcbin
             .emit_by_name("set-local-description", &[&answer, &None::<gst::Promise>])?;
 
-        info!(
-            "sending SDP answer to peer: {:?}",
-            answer.sdp().as_text()
-        );
+        info!("sending SDP answer to peer: {:?}", answer.sdp().as_text());
 
         Ok(())
     }
@@ -435,6 +396,7 @@ impl JanusGateway {
             .await
             .ok_or_else(|| anyhow!("didn't receive anything"))??;
         let payload = msg.to_text()?;
+        println!("create response: {}", payload);
         let json_msg: JsonReply = serde_json::from_str(payload)?;
         assert_eq!(json_msg.base.janus, "success");
         assert_eq!(json_msg.base.transaction, Some(transaction));
@@ -457,6 +419,7 @@ impl JanusGateway {
             .await
             .ok_or_else(|| anyhow!("didn't receive anything"))??;
         let payload = msg.to_text()?;
+        println!("attach response: {}", payload);
         let json_msg: JsonReply = serde_json::from_str(payload)?;
         assert_eq!(json_msg.base.janus, "success");
         assert_eq!(json_msg.base.transaction, Some(transaction));
@@ -480,53 +443,20 @@ impl JanusGateway {
         );
         ws.send(msg).await?;
 
-        let webrtcbin = pipeline
-            .by_name("webrtcbin")
-            .expect("can't find webrtcbin");
+        let msg = ws
+            .next()
+            .await
+            .ok_or_else(|| anyhow!("didn't receive anything"))??;
+        let payload = msg.to_text()?;
+        println!("join response: {}", payload);
 
-        let webrtc_codec = &args.webrtc_video_codec;
-        let bin_description = &format!(
-            "{encoder} name=encoder ! {payloader} ! queue ! capsfilter name=webrtc-vsink caps=\"application/x-rtp,media=video,encoding-name={encoding_name},payload=96\"",
-            encoder=webrtc_codec.encoder, payloader=webrtc_codec.payloader,
-            encoding_name=webrtc_codec.encoding_name
-        );
+        let webrtcbin = pipeline.by_name("webrtcbin").expect("can't find webrtcbin");
 
-        let encode_bin =
-            gst::parse_bin_from_description_with_name(bin_description, false, "encode-bin")?;
-
-        pipeline.add(&encode_bin).expect("Failed to add encode bin");
-
-        let video_queue = pipeline.by_name("vqueue").expect("No vqueue found");
-        let encoder = encode_bin.by_name("encoder").expect("No encoder");
-
-        let srcpad = video_queue
-            .static_pad("src")
-            .expect("Failed to get video queue src pad");
-        let sinkpad = encoder
-            .static_pad("sink")
-            .expect("Failed to get sink pad from encoder");
-
-        if let Ok(video_ghost_pad) = gst::GhostPad::with_target(Some("video_sink"), &sinkpad) {
-            encode_bin.add_pad(&video_ghost_pad)?;
-            srcpad.link(&video_ghost_pad)?;
-        }
-
-        let sinkpad2 = webrtcbin
-            .request_pad_simple("sink_%u")
-            .expect("Unable to request outgoing webrtcbin pad");
-        let vsink = encode_bin
-            .by_name("webrtc-vsink")
-            .expect("No webrtc-vsink found");
-        let srcpad = vsink
-            .static_pad("src")
-            .expect("Element without src pad");
-        if let Ok(webrtc_ghost_pad) = gst::GhostPad::with_target(Some("webrtc_video_src"), &srcpad)
+        if let Some(transceiver) = webrtcbin
+            .emit_by_name("get-transceiver", &[&0.to_value()])
+            .unwrap()
+            .and_then(|val| val.get::<glib::Object>().ok())
         {
-            encode_bin.add_pad(&webrtc_ghost_pad)?;
-            webrtc_ghost_pad.link(&sinkpad2)?;
-        }
-
-        if let Some(transceiver) = webrtcbin.emit_by_name("get-transceiver", &[&0.to_value()]).unwrap().and_then(|val| val.get::<glib::Object>().ok()) {
             transceiver.set_property("do-nack", &false.to_value())?;
         }
 
@@ -564,12 +494,8 @@ impl JanusGateway {
         let peer_clone = peer.downgrade();
         peer.webrtcbin
             .connect("on-ice-candidate", false, move |values| {
-                let mlineindex = values[1]
-                    .get::<u32>()
-                    .expect("Invalid type");
-                let candidate = values[2]
-                    .get::<String>()
-                    .expect("Invalid type");
+                let mlineindex = values[1].get::<u32>().expect("Invalid type");
+                let candidate = values[2].get::<String>().expect("Invalid type");
 
                 let peer = upgrade_weak!(peer_clone, None);
                 if let Err(err) = peer.on_ice_candidate(mlineindex, candidate) {
@@ -636,7 +562,7 @@ impl JanusGateway {
                     ws_msg = send_ws_msg_rx.select_next_some() => Some(ws_msg),
 
                     // Handle keepalive ticks, fired every 10 seconds
-                    ws_msg = timer_fuse.select_next_some() => {
+                    _ws_msg = timer_fuse.select_next_some() => {
                         let transaction = transaction_id();
                         Some(WsMessage::Text(
                             json!({
