@@ -64,8 +64,7 @@ const VP8: VideoParameter = VideoParameter {
 };
 
 const H264: VideoParameter = VideoParameter {
-    encoder: "vaapih264enc",
-    // encoder: "x264enc tune=zerolatency",
+    encoder: "x264enc tune=zerolatency",
     encoding_name: "H264",
     payloader: "rtph264pay aggregate-mode=zero-latency",
 };
@@ -89,11 +88,11 @@ const DEFAULT_SERVER: &str = "wss://janus.3exp8.network:8989";
 
 #[derive(Debug, StructOpt)]
 pub struct Args {
-    #[structopt(short, long, default_value = "wss://janus.conf.meetecho.com/ws:8989")]
+    #[structopt(short, long, default_value = DEFAULT_SERVER)]
     server: String,
     #[structopt(short, long, default_value = "1234")]
     room_id: u32,
-    #[structopt(short, long, default_value = "1234")]
+    #[structopt(short, long, default_value = "3445")]
     feed_id: u32,
     #[structopt(short, long, default_value = "h264")]
     webrtc_video_codec: VideoParameter,
@@ -481,51 +480,55 @@ impl JanusGateway {
         );
         ws.send(msg).await?;
 
-        // let mut sink_index = 0;
-        // let webrtc_bin = gst::parse_bin_from_description("webrtcbin name=webrtcbin", false)?;
-        // pipeline.add(&webrtc_bin)?;
-
         let webrtcbin = pipeline
             .by_name("webrtcbin")
             .expect("can't find webrtcbin");
 
-        // let webrtc_codec = &args.webrtc_video_codec;
-        // // let bin_description = &format!(
-        // //     "{encoder} name=encoder ! {payloader} ! queue ! capsfilter name=webrtc-vsink caps=\"application/x-rtp,media=video,encoding-name={encoding_name},payload=96\"",
-        // //     encoder=webrtc_codec.encoder, payloader=webrtc_codec.payloader,
-        // //     encoding_name=webrtc_codec.encoding_name
-        // // );
-        // let bin_description = gst::parse_bin_from_description(format!(
-        //     "rtspsrc location=rtsp://10.50.13.252:554/1/h264major ! capsfilter caps=\"application/x-rtp,payload=96,media=video,encoding-name={encoding_name}\" ! rtph264depay ! h264parse ! vaapih264dec ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! {encoder} ! {payloader} ! capsfilter caps=\"application/x-rtp,payload=96,media=video,encoding-name={encoding_name}\"",
-        //     encoder=webrtc_codec.encoder, payloader=webrtc_codec.payloader,
-        //     encoding_name=webrtc_codec.encoding_name
-        // ).as_str(), true,)?;
+        let webrtc_codec = &args.webrtc_video_codec;
+        let bin_description = &format!(
+            "{encoder} name=encoder ! {payloader} ! queue ! capsfilter name=webrtc-vsink caps=\"application/x-rtp,media=video,encoding-name={encoding_name},payload=96\"",
+            encoder=webrtc_codec.encoder, payloader=webrtc_codec.payloader,
+            encoding_name=webrtc_codec.encoding_name
+        );
 
-        // webrtc_bin.add(&bin_description)?;
+        let encode_bin =
+            gst::parse_bin_from_description_with_name(bin_description, false, "encode-bin")?;
 
-        // let video_src_elem = bin_description
-        //     .static_pad("src")
-        //     .expect("Unable to get video src pad");
+        pipeline.add(&encode_bin).expect("Failed to add encode bin");
 
-        // let video_sink = webrtcbin
-        //     .request_pad_simple(format!("sink_{}", sink_index).as_str())
-        //     .expect("Unable to request outgoing webrtcbin pad");
+        let video_queue = pipeline.by_name("vqueue").expect("No vqueue found");
+        let encoder = encode_bin.by_name("encoder").expect("No encoder");
 
-        // if let Ok(webrtc_ghost_video_src) =
-        //     gst::GhostPad::with_target(Some("webrtc_video_src"), &video_src_elem)
-        // {
-        //     bin_description.add_pad(&webrtc_ghost_video_src)?;
-        //     webrtc_ghost_video_src.link(&video_sink)?;
-        //     println!("Connected Video Pads");
-        // }
+        let srcpad = video_queue
+            .static_pad("src")
+            .expect("Failed to get video queue src pad");
+        let sinkpad = encoder
+            .static_pad("sink")
+            .expect("Failed to get sink pad from encoder");
+
+        if let Ok(video_ghost_pad) = gst::GhostPad::with_target(Some("video_sink"), &sinkpad) {
+            encode_bin.add_pad(&video_ghost_pad)?;
+            srcpad.link(&video_ghost_pad)?;
+        }
+
+        let sinkpad2 = webrtcbin
+            .request_pad_simple("sink_%u")
+            .expect("Unable to request outgoing webrtcbin pad");
+        let vsink = encode_bin
+            .by_name("webrtc-vsink")
+            .expect("No webrtc-vsink found");
+        let srcpad = vsink
+            .static_pad("src")
+            .expect("Element without src pad");
+        if let Ok(webrtc_ghost_pad) = gst::GhostPad::with_target(Some("webrtc_video_src"), &srcpad)
+        {
+            encode_bin.add_pad(&webrtc_ghost_pad)?;
+            webrtc_ghost_pad.link(&sinkpad2)?;
+        }
 
         if let Some(transceiver) = webrtcbin.emit_by_name("get-transceiver", &[&0.to_value()]).unwrap().and_then(|val| val.get::<glib::Object>().ok()) {
             transceiver.set_property("do-nack", &false.to_value())?;
         }
-
-        // sink_index = sink_index + 1;
-
-        // webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
 
         let (send_ws_msg_tx, send_ws_msg_rx) = mpsc::unbounded::<WsMessage>();
 

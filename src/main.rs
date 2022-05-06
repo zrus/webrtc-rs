@@ -68,16 +68,13 @@ impl App {
     fn new() -> Result<Self, anyhow::Error> {
         let pipeline = gst::parse_launch(
             &"webrtcbin name=webrtcbin stun-server=stun://stun.l.google.com:19302 \
-             rtspsrc location=rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4 ! queue ! 
-             capsfilter caps=\"application/x-rtp,pt=96,media=video,encodeing-name=H264\" ! rtph264depay ! h264parse ! 
-             vaapih264dec ! queue ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! vaapih264enc ! rtph264pay ! capsfilter caps=\"application/x-rtp,pt=96,media=video,encoding-name=H264\" ! webrtcbin."
+            rtspsrc location=rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4 ! capsfilter caps=\"application/x-rtp,pt=96,media=video,encodeing-name=H264\" ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! queue name=vqueue"
                 .to_string(),
         )?;
 
         let pipeline = pipeline
             .downcast::<gst::Pipeline>()
             .expect("Couldn't downcast pipeline");
-        // let pipeline = gst::Pipeline::new(Some("janus"));
 
         let bus = pipeline.bus().unwrap();
         let app = App(Arc::new(AppInner { pipeline }));
@@ -150,6 +147,7 @@ fn check_plugins() -> Result<(), anyhow::Error> {
         "videotestsrc",
         "videoconvert",
         "autodetect",
+        "vpx",
         "webrtc",
         "nice",
         "dtls",
