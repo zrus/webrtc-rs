@@ -89,7 +89,7 @@ const DEFAULT_SERVER: &str = "wss://janus.3exp8.network:8989";
 
 #[derive(Debug, StructOpt)]
 pub struct Args {
-    #[structopt(short, long, default_value = DEFAULT_SERVER)]
+    #[structopt(short, long, default_value = "wss://janus.conf.meetecho.com/ws:8989")]
     server: String,
     #[structopt(short, long, default_value = "1234")]
     room_id: u32,
@@ -525,7 +525,7 @@ impl JanusGateway {
 
         // sink_index = sink_index + 1;
 
-        webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
+        // webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
 
         let (send_ws_msg_tx, send_ws_msg_rx) = mpsc::unbounded::<WsMessage>();
 
