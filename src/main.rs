@@ -71,7 +71,7 @@ impl App {
             location=rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4 !  
             capsfilter caps=\"application/x-rtp,pt=96,media=video\" ! rtph264depay ! h264parse ! avdec_h264 !
             videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! x264enc !
-            rtph264pay config-interval=-1 aggregate-mode=zerolatency ! application/x-rtp,media=video,encoding-name=H264,payload=96 !
+            rtph264pay config-interval=-1 aggregate-mode=none ! application/x-rtp,media=video,encoding-name=H264,payload=96 !
             webrtcbin. webrtcbin name=webrtcbin stun-server=stun://stun.l.google.com:19302"
             .to_owned(),
         )?;
