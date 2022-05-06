@@ -71,7 +71,7 @@ impl App {
              rtspsrc location=rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4 ! queue ! 
              capsfilter caps=\"application/x-rtp,pt=96,media=video\" ! rtph264depay ! h264parse ! 
              vaapih264dec ! queue ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! queue name=vqueue"
-                .to_string(),
+                .to_owned(),
         )?;
 
         let pipeline = pipeline
@@ -150,7 +150,7 @@ fn check_plugins() -> Result<(), anyhow::Error> {
         "videoconvert",
         "autodetect",
         "webrtc",
-        "nice",
+        // "nice",
         "dtls",
         "srtp",
         "rtpmanager",
