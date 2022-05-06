@@ -602,7 +602,7 @@ impl JanusGateway {
         let json_msg: JsonReply = serde_json::from_str(msg)?;
         let payload_type = &json_msg.base.janus;
         if payload_type == "ack" {
-            println!(
+            trace!(
                 "Ack transaction {:#?}, sessionId {:#?}",
                 json_msg.base.transaction,
                 json_msg.base.session_id
