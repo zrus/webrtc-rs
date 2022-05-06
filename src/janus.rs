@@ -496,7 +496,7 @@ impl JanusGateway {
         //     encoding_name=webrtc_codec.encoding_name
         // );
         let bin_description = gst::parse_bin_from_description(format!(
-            "rtspsrc location=rtsp://10.50.13.252:554/1/h264major ! queue ! capsfilter caps='application/x-rtp,payload=96,media=video,encoding-name={encoding_name}' ! rtph264depay ! h264parse ! vaapih264dec ! queue ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! {encoder} ! {payloader} ! capsfilter caps='application/x-rtp,payload=96,media=video,encoding-name={encoding_name}'",
+            "rtspsrc location=rtsp://10.50.13.252:554/1/h264major ! queue ! capsfilter caps=\"application/x-rtp,payload=96,media=video,encoding-name={encoding_name}\" ! rtph264depay ! h264parse ! vaapih264dec ! queue ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! {encoder} ! {payloader} ! capsfilter caps=\"application/x-rtp,payload=96,media=video,encoding-name={encoding_name}\"",
             encoder=webrtc_codec.encoder, payloader=webrtc_codec.payloader,
             encoding_name=webrtc_codec.encoding_name
         ).as_str(), true,)?;
