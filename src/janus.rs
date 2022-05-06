@@ -481,49 +481,49 @@ impl JanusGateway {
         );
         ws.send(msg).await?;
 
-        let mut sink_index = 0;
-        let webrtc_bin = gst::parse_bin_from_description("webrtcbin name=webrtcbin", false)?;
-        pipeline.add(&webrtc_bin)?;
+        // let mut sink_index = 0;
+        // let webrtc_bin = gst::parse_bin_from_description("webrtcbin name=webrtcbin", false)?;
+        // pipeline.add(&webrtc_bin)?;
 
         let webrtcbin = pipeline
             .by_name("webrtcbin")
             .expect("can't find webrtcbin");
 
-        let webrtc_codec = &args.webrtc_video_codec;
-        // let bin_description = &format!(
-        //     "{encoder} name=encoder ! {payloader} ! queue ! capsfilter name=webrtc-vsink caps=\"application/x-rtp,media=video,encoding-name={encoding_name},payload=96\"",
+        // let webrtc_codec = &args.webrtc_video_codec;
+        // // let bin_description = &format!(
+        // //     "{encoder} name=encoder ! {payloader} ! queue ! capsfilter name=webrtc-vsink caps=\"application/x-rtp,media=video,encoding-name={encoding_name},payload=96\"",
+        // //     encoder=webrtc_codec.encoder, payloader=webrtc_codec.payloader,
+        // //     encoding_name=webrtc_codec.encoding_name
+        // // );
+        // let bin_description = gst::parse_bin_from_description(format!(
+        //     "rtspsrc location=rtsp://10.50.13.252:554/1/h264major ! capsfilter caps=\"application/x-rtp,payload=96,media=video,encoding-name={encoding_name}\" ! rtph264depay ! h264parse ! vaapih264dec ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! {encoder} ! {payloader} ! capsfilter caps=\"application/x-rtp,payload=96,media=video,encoding-name={encoding_name}\"",
         //     encoder=webrtc_codec.encoder, payloader=webrtc_codec.payloader,
         //     encoding_name=webrtc_codec.encoding_name
-        // );
-        let bin_description = gst::parse_bin_from_description(format!(
-            "rtspsrc location=rtsp://10.50.13.252:554/1/h264major ! capsfilter caps=\"application/x-rtp,payload=96,media=video,encoding-name={encoding_name}\" ! rtph264depay ! h264parse ! vaapih264dec ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! {encoder} ! {payloader} ! capsfilter caps=\"application/x-rtp,payload=96,media=video,encoding-name={encoding_name}\"",
-            encoder=webrtc_codec.encoder, payloader=webrtc_codec.payloader,
-            encoding_name=webrtc_codec.encoding_name
-        ).as_str(), true,)?;
+        // ).as_str(), true,)?;
 
-        webrtc_bin.add(&bin_description)?;
+        // webrtc_bin.add(&bin_description)?;
 
-        let video_src_elem = bin_description
-            .static_pad("src")
-            .expect("Unable to get video src pad");
+        // let video_src_elem = bin_description
+        //     .static_pad("src")
+        //     .expect("Unable to get video src pad");
 
-        let video_sink = webrtcbin
-            .request_pad_simple(format!("sink_{}", sink_index).as_str())
-            .expect("Unable to request outgoing webrtcbin pad");
+        // let video_sink = webrtcbin
+        //     .request_pad_simple(format!("sink_{}", sink_index).as_str())
+        //     .expect("Unable to request outgoing webrtcbin pad");
 
-        if let Ok(webrtc_ghost_video_src) =
-            gst::GhostPad::with_target(Some("webrtc_video_src"), &video_src_elem)
-        {
-            bin_description.add_pad(&webrtc_ghost_video_src)?;
-            webrtc_ghost_video_src.link(&video_sink)?;
-            println!("Connected Video Pads");
-        }
+        // if let Ok(webrtc_ghost_video_src) =
+        //     gst::GhostPad::with_target(Some("webrtc_video_src"), &video_src_elem)
+        // {
+        //     bin_description.add_pad(&webrtc_ghost_video_src)?;
+        //     webrtc_ghost_video_src.link(&video_sink)?;
+        //     println!("Connected Video Pads");
+        // }
 
         if let Some(transceiver) = webrtcbin.emit_by_name("get-transceiver", &[&0.to_value()]).unwrap().and_then(|val| val.get::<glib::Object>().ok()) {
             transceiver.set_property("do-nack", &false.to_value())?;
         }
 
-        sink_index = sink_index + 1;
+        // sink_index = sink_index + 1;
 
         webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
 
