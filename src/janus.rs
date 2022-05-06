@@ -173,7 +173,7 @@ impl Peer {
     // for a new offer SDP from webrtcbin without any customization and then
     // asynchronously send it to the peer via the WebSocket connection
     fn on_negotiation_needed(&self) -> Result<(), anyhow::Error> {
-        info!("starting negotiation with peer");
+        println!("starting negotiation with peer");
 
         let peer_clone = self.downgrade();
         let promise = gst::Promise::with_change_func(move |res| {
@@ -204,7 +204,7 @@ impl Peer {
         self.webrtcbin
             .emit_by_name("set-local-description", &[&offer, &None::<gst::Promise>])?;
 
-        info!("sending SDP offer to peer: {:?}", offer.sdp().as_text());
+        println!("sending SDP offer to peer: {:?}", offer.sdp().as_text());
 
         let transaction = transaction_id();
         let sdp_data = offer.sdp().as_text()?;
@@ -245,7 +245,7 @@ impl Peer {
         self.webrtcbin
             .emit_by_name("set-local-description", &[&answer, &None::<gst::Promise>])?;
 
-        info!("sending SDP answer to peer: {:?}", answer.sdp().as_text());
+        println!("sending SDP answer to peer: {:?}", answer.sdp().as_text());
 
         Ok(())
     }
@@ -253,7 +253,7 @@ impl Peer {
     // Handle incoming SDP answers from the peer
     fn handle_sdp(&self, type_: &str, sdp: &str) -> Result<(), anyhow::Error> {
         if type_ == "answer" {
-            info!("Received answer:\n{}\n", sdp);
+            println!("Received answer:\n{}\n", sdp);
 
             let ret = gst_sdp::SDPMessage::parse_buffer(sdp.as_bytes())
                 .map_err(|_| anyhow!("Failed to parse SDP answer"))?;
@@ -265,7 +265,7 @@ impl Peer {
 
             Ok(())
         } else if type_ == "offer" {
-            info!("Received offer:\n{}\n", sdp);
+            println!("Received offer:\n{}\n", sdp);
 
             let ret = gst_sdp::SDPMessage::parse_buffer(sdp.as_bytes())
                 .map_err(|_| anyhow!("Failed to parse SDP offer"))?;
@@ -314,7 +314,7 @@ impl Peer {
 
     // Handle incoming ICE candidates from the peer by passing them to webrtcbin
     fn handle_ice(&self, sdp_mline_index: u32, candidate: &str) -> Result<(), anyhow::Error> {
-        info!(
+        println!(
             "Received remote ice-candidate {} {}",
             sdp_mline_index, candidate
         );
@@ -328,7 +328,7 @@ impl Peer {
     // message
     fn on_ice_candidate(&self, mlineindex: u32, candidate: String) -> Result<(), anyhow::Error> {
         let transaction = transaction_id();
-        info!("Sending ICE {} {}", mlineindex, &candidate);
+        println!("Sending ICE {} {}", mlineindex, &candidate);
         let msg = WsMessage::Text(
             json!({
                 "janus": "trickle",
@@ -396,7 +396,6 @@ impl JanusGateway {
             .await
             .ok_or_else(|| anyhow!("didn't receive anything"))??;
         let payload = msg.to_text()?;
-        println!("create response: {}", payload);
         let json_msg: JsonReply = serde_json::from_str(payload)?;
         assert_eq!(json_msg.base.janus, "success");
         assert_eq!(json_msg.base.transaction, Some(transaction));
@@ -419,7 +418,6 @@ impl JanusGateway {
             .await
             .ok_or_else(|| anyhow!("didn't receive anything"))??;
         let payload = msg.to_text()?;
-        println!("attach response: {}", payload);
         let json_msg: JsonReply = serde_json::from_str(payload)?;
         assert_eq!(json_msg.base.janus, "success");
         assert_eq!(json_msg.base.transaction, Some(transaction));
@@ -448,7 +446,6 @@ impl JanusGateway {
             .await
             .ok_or_else(|| anyhow!("didn't receive anything"))??;
         let payload = msg.to_text()?;
-        println!("join response: {}", payload);
 
         let webrtcbin = pipeline.by_name("webrtcbin").expect("can't find webrtcbin");
 
@@ -543,7 +540,7 @@ impl JanusGateway {
                     ws_msg = ws_stream.select_next_some() => {
                         match ws_msg? {
                             WsMessage::Close(_) => {
-                                info!("peer disconnected");
+                                println!("peer disconnected");
                                 break
                             },
                             WsMessage::Ping(data) => Some(WsMessage::Pong(data)),
@@ -551,7 +548,7 @@ impl JanusGateway {
                             WsMessage::Binary(_) => None,
                             WsMessage::Text(text) => {
                                 if let Err(err) = self.handle_websocket_message(&text) {
-                                    error!("Failed to parse message: {} ... error: {}", &text, err);
+                                    println!("Failed to parse message: {} ... error: {}", &text, err);
                                 }
                                 None
                             },
@@ -601,17 +598,17 @@ impl JanusGateway {
 
     // Handle WebSocket messages, both our own as well as WebSocket protocol messages
     fn handle_websocket_message(&self, msg: &str) -> Result<(), anyhow::Error> {
-        trace!("Incoming raw message: {}", msg);
+        println!("Incoming raw message: {}", msg);
         let json_msg: JsonReply = serde_json::from_str(msg)?;
         let payload_type = &json_msg.base.janus;
         if payload_type == "ack" {
-            trace!(
+            println!(
                 "Ack transaction {:#?}, sessionId {:#?}",
                 json_msg.base.transaction,
                 json_msg.base.session_id
             );
         } else {
-            debug!("Incoming JSON WebSocket message: {:#?}", json_msg);
+            println!("Incoming JSON WebSocket message: {:#?}", json_msg);
         }
         if payload_type == "event" {
             if let Some(_plugin_data) = json_msg.plugin_data {
