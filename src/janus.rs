@@ -216,7 +216,7 @@ impl Peer {
                  "handle_id": self.handle.id,
                  "body": {
                      "request": "publish",
-                     "audio": true,
+                     "audio": false,
                      "video": true,
                  },
                  "jsep": {
@@ -441,12 +441,6 @@ impl JanusGateway {
         );
         ws.send(msg).await?;
 
-        let msg = ws
-            .next()
-            .await
-            .ok_or_else(|| anyhow!("didn't receive anything"))??;
-        let payload = msg.to_text()?;
-
         let webrtcbin = pipeline.by_name("webrtcbin").expect("can't find webrtcbin");
 
         if let Some(transceiver) = webrtcbin
@@ -598,7 +592,7 @@ impl JanusGateway {
 
     // Handle WebSocket messages, both our own as well as WebSocket protocol messages
     fn handle_websocket_message(&self, msg: &str) -> Result<(), anyhow::Error> {
-        println!("Incoming raw message: {}", msg);
+        trace!("Incoming raw message: {}", msg);
         let json_msg: JsonReply = serde_json::from_str(msg)?;
         let payload_type = &json_msg.base.janus;
         if payload_type == "ack" {
