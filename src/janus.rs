@@ -493,53 +493,11 @@ impl JanusGateway {
             .by_name("webrtcbin")
             .expect("can't find webrtcbin");
 
-        // let webrtc_codec = &args.webrtc_video_codec;
-        // let bin_description = &format!(
-        //     "{encoder} name=encoder ! {payloader} ! queue ! capsfilter name=webrtc-vsink caps=\"application/x-rtp,media=video,encoding-name={encoding_name},payload=96\"",
-        //     encoder=webrtc_codec.encoder, payloader=webrtc_codec.payloader,
-        //     encoding_name=webrtc_codec.encoding_name
-        // );
-
-        // let encode_bin =
-        //     gst::parse_bin_from_description_with_name(bin_description, false, "encode-bin")?;
-
-        // pipeline.add(&encode_bin).expect("Failed to add encode bin");
-
-        // let video_queue = pipeline.by_name("vqueue").expect("No vqueue found");
-        // let encoder = encode_bin.by_name("encoder").expect("No encoder");
-
-        // let srcpad = video_queue
-        //     .static_pad("src")
-        //     .expect("Failed to get video queue src pad");
-        // let sinkpad = encoder
-        //     .static_pad("sink")
-        //     .expect("Failed to get sink pad from encoder");
-
-        // if let Ok(video_ghost_pad) = gst::GhostPad::with_target(Some("video_sink"), &sinkpad) {
-        //     encode_bin.add_pad(&video_ghost_pad)?;
-        //     srcpad.link(&video_ghost_pad)?;
-        // }
-
-        // let sinkpad2 = webrtcbin
-        //     .request_pad_simple("sink_%u")
-        //     .expect("Unable to request outgoing webrtcbin pad");
-        // let vsink = encode_bin
-        //     .by_name("webrtc-vsink")
-        //     .expect("No webrtc-vsink found");
-        // let srcpad = vsink
-        //     .static_pad("src")
-        //     .expect("Element without src pad");
-        // if let Ok(webrtc_ghost_pad) = gst::GhostPad::with_target(Some("webrtc_video_src"), &srcpad)
-        // {
-        //     encode_bin.add_pad(&webrtc_ghost_pad)?;
-        //     webrtc_ghost_pad.link(&sinkpad2)?;
-        // }
-
         if let Some(transceiver) = webrtcbin.emit_by_name("get-transceiver", &[&0.to_value()]).unwrap().and_then(|val| val.get::<glib::Object>().ok()) {
             transceiver.set_property("do-nack", &false.to_value())?;
         }
 
-        webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
+        // webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
 
         let (send_ws_msg_tx, send_ws_msg_rx) = mpsc::unbounded::<WsMessage>();
 

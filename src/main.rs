@@ -66,17 +66,19 @@ impl App {
     }
 
     fn new() -> Result<Self, anyhow::Error> {
-        let pipeline = gst::parse_launch(
-            &"webrtcbin name=webrtcbin stun-server=stun://stun.l.google.com:19302 \
-            rtspsrc location=rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4 ! queue ! capsfilter caps=\"application/x-rtp,pt=96,media=video,encodeing-name=H264\" ! rtph264depay ! queue ! rtph264pay config-interval=1 ! capsfilter caps=\"application/x-rtp,pt=97,media=video,encoding-name=H264\" ! webrtcbin."
-                .to_string(),
-        )?;
-
         // let pipeline = gst::parse_launch(
         //     &"webrtcbin name=webrtcbin stun-server=stun://stun.l.google.com:19302 \
-        //      videotestsrc pattern=ball ! videoconvert ! queue name=vqueue"
+        //     rtspsrc location=rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4 ! queue ! capsfilter caps=\"application/x-rtp,pt=96,media=video,encodeing-name=H264\" ! 
+        //     rtph264depay ! queue ! rtph264pay config-interval=1 ! capsfilter caps=\"application/x-rtp,pt=96,media=video,encoding-name=H264\" ! webrtcbin."
         //         .to_string(),
         // )?;
+
+        let pipeline = gst::parse_launch(
+            &"webrtcbin name=webrtcbin bundle-policy=max-bundle stun-server=stun://stun.l.google.com:19302 \
+             videotestsrc pattern=ball is-live=true ! video/x-raw,width=320,height=240 ! videoconvert ! queue ! x264enc ! rtph264pay !
+             queue ! application/x-rtp,media=video,encoding-name=H264,payload=96 ! webrtcbin."
+                .to_string(),
+        )?;
 
 
         let pipeline = pipeline
