@@ -539,7 +539,7 @@ impl JanusGateway {
             transceiver.set_property("do-nack", &false.to_value())?;
         }
 
-        // webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
+        webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
 
         let (send_ws_msg_tx, send_ws_msg_rx) = mpsc::unbounded::<WsMessage>();
 
