@@ -81,7 +81,7 @@ impl App {
         // )?;
 
         let pipeline = gst::parse_launch(
-            &"webrtcbin name=webrtcbin bundle-policy=max-bundle stun-server=stun://stun.l.google.com:19302 \
+            &"webrtcbin name=webrtcbin stun-server=stun://stun.l.google.com:19302 \
              videotestsrc pattern=ball ! videoconvert ! queue name=vqueue"
                 .to_string(),
         )?;
