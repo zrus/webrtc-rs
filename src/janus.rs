@@ -94,7 +94,7 @@ pub struct Args {
     room_id: u32,
     #[structopt(short, long, default_value = "344544")]
     feed_id: u32,
-    #[structopt(short, long, default_value = "h264")]
+    #[structopt(short, long, default_value = "vp8")]
     webrtc_video_codec: VideoParameter,
 }
 
