@@ -73,10 +73,16 @@ impl App {
         //         .to_string(),
         // )?;
 
+        // let pipeline = gst::parse_launch(
+        //     &"webrtcbin name=webrtcbin bundle-policy=max-bundle stun-server=stun://stun.l.google.com:19302 \
+        //      videotestsrc pattern=ball is-live=true ! video/x-raw,width=320,height=240 ! videoconvert ! queue ! x264enc ! rtph264pay !
+        //      queue ! application/x-rtp,media=video,encoding-name=H264,payload=96 ! webrtcbin."
+        //         .to_string(),
+        // )?;
+
         let pipeline = gst::parse_launch(
             &"webrtcbin name=webrtcbin bundle-policy=max-bundle stun-server=stun://stun.l.google.com:19302 \
-             videotestsrc pattern=ball is-live=true ! video/x-raw,width=320,height=240 ! videoconvert ! queue ! x264enc ! rtph264pay !
-             queue ! application/x-rtp,media=video,encoding-name=H264,payload=96 ! webrtcbin."
+             videotestsrc pattern=ball ! videoconvert ! queue name=vqueue"
                 .to_string(),
         )?;
 
