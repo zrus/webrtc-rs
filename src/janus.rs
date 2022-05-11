@@ -88,7 +88,7 @@ const DEFAULT_SERVER: &str = "wss://janus.3exp8.network:8989";
 
 #[derive(Debug, StructOpt)]
 pub struct Args {
-    #[structopt(short, long, default_value = "wss://janus.conf.meetecho.com/ws:8989")]
+    #[structopt(short, long, default_value = DEFAULT_SERVER)]
     server: String,
     #[structopt(short, long, default_value = "1234")]
     room_id: u32,
