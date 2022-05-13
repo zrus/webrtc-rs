@@ -91,8 +91,8 @@ pub struct Args {
     #[structopt(short, long, default_value = "1234")]
     room_id: u32,
     #[structopt(short, long, default_value = "1234")]
-    feed_id: u32,
-    #[structopt(short, long, default_value = "vp8")]
+    pub feed_id: String,
+    #[structopt(short, long, default_value = "h264")]
     webrtc_video_codec: VideoParameter,
 }
 
@@ -496,6 +496,7 @@ impl JanusGateway {
                     "ptype": "publisher",
                     "room": args.room_id,
                     "display": format!("{}",args.feed_id).as_str(),
+                    // "display": url.as_str(),
                     // "id": args.feed_id,
                 },
             })
@@ -657,7 +658,7 @@ impl JanusGateway {
 
     // Handle WebSocket messages, both our own as well as WebSocket protocol messages
     fn handle_websocket_message(&self, msg: &str) -> Result<(), anyhow::Error> {
-        println!("Incoming raw message: {}", msg);
+        // println!("Incoming raw message: {}", msg);
         let json_msg: JsonReply = serde_json::from_str(msg)?;
         let payload_type = &json_msg.base.janus;
         if payload_type == "ack" {

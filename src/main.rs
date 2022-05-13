@@ -24,6 +24,9 @@ use anyhow::bail;
 use gst::prelude::*;
 use std::sync::{Arc, Weak};
 
+use crate::janus::Args;
+use structopt::StructOpt;
+
 #[macro_use]
 extern crate log;
 
@@ -65,22 +68,23 @@ impl App {
         AppWeak(Arc::downgrade(&self.0))
     }
 
-    fn new() -> Result<Self, anyhow::Error> {
+    fn new(url: String) -> Result<Self, anyhow::Error> {
+        // println!("XXXXXXXXXXXXXX Create new App: {}", url);
+        let pipeline = gst::parse_launch(
+            &format!("webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302 \
+                rtspsrc location={} ! capsfilter caps=\"application/x-rtp,pt=96,clock-rate=90000,media=video,encodeing-name=H264\" ! \
+                rtph264depay ! avdec_h264 ! videoconvert ! videoscale ! video/x-raw,width=720,height=480 ! x264enc ! rtph264pay ! queue ! \
+                capsfilter caps=\"application/x-rtp,pt=96,clock-rate=90000,media=video,encoding-name=H264\" ! sendrecv."
+            , url.as_str())
+        )?;
+
         // let pipeline = gst::parse_launch(
         //     &"webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302 \
-        //     rtspsrc location=rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4 ! capsfilter caps=\"application/x-rtp,pt=96,clock-rate=90000,media=video,encodeing-name=H264\" ! \
-        //     rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! x264enc ! \
-        //     rtph264pay ! capsfilter caps=\"application/x-rtp,pt=96,clock-rate=90000,media=video,encoding-name=H264\" ! sendrecv."
+        //     rtspsrc location=rtsp://10.50.13.252/1/h264major ! queue ! capsfilter caps=\"application/x-rtp,pt=96,clock-rate=90000,media=video,encodeing-name=VP8\" ! \
+        //     rtpvp8depay ! vp8dec ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! vp8enc target-bitrate=100000 overshoot=25 undershoot=100 deadline=33000 keyframe-max-dist=1 ! \
+        //     rtpvp8pay picture-id-mode=2 ! queue ! capsfilter caps=\"application/x-rtp,pt=96,clock-rate=90000,media=video,encoding-name=VP8\" ! sendrecv."
         //         .to_string(),
         // )?;
-
-        let pipeline = gst::parse_launch(
-            &"webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302 \
-            rtspsrc location=rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4 ! queue ! capsfilter caps=\"application/x-rtp,pt=96,clock-rate=90000,media=video,encodeing-name=VP8\" ! \
-            rtpvp8depay ! vp8dec ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! vp8enc target-bitrate=100000 overshoot=25 undershoot=100 deadline=33000 keyframe-max-dist=1 ! \
-            rtpvp8pay picture-id-mode=2 ! queue ! capsfilter caps=\"application/x-rtp,pt=96,clock-rate=90000,media=video,encoding-name=VP8\" ! sendrecv."
-                .to_string(),
-        )?;
 
         // let pipeline = gst::parse_launch(
         //     &"webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302
@@ -107,9 +111,37 @@ impl App {
             glib::Continue(true)
         })
         .expect("Unable to add bus watch");
+
         Ok(app)
     }
 
+    // fn handle_pipeline_message(&self) -> Result<(), anyhow::Error> {
+    //     let bus = self.pipeline.bus().unwrap();
+
+    //     for msg in bus.iter_timed(gst::ClockTime::NONE) {
+    //         use gst::message::MessageView;
+            
+    //         match msg.view() {
+    //             MessageView::Error(err) => bail!(
+    //                 "Error from element {}: {} ({})",
+    //                 err.src()
+    //                 .map(|s| String::from(s.path_string()))
+    //                 .unwrap_or_else(|| String::from("None")),
+    //                 err.error(),
+    //                 err.debug().unwrap_or_else(|| String::from("None")),
+    //             ),
+    //             MessageView::Warning(warning) => {
+    //                 println!("Warning: \"{}\"", warning.debug().unwrap());
+    //             }
+    //             MessageView::Eos(..) => {
+    //                 return Ok(())
+    //             }
+    //             _ => (),
+    //         }
+    //     }
+
+    //     Ok(())
+    // }
     fn handle_pipeline_message(&self, message: &gst::Message) -> Result<(), anyhow::Error> {
         use gst::message::MessageView;
 
@@ -129,6 +161,26 @@ impl App {
         }
         Ok(())
     }
+
+    // pub async fn run(&self, url: String) -> Result<(), anyhow::Error> {
+    //     let bin = self.pipeline.clone().upcast::<gst::Bin>();
+    //     let mut gw = janus::JanusGateway::new(bin, url).await?;
+
+    //     // Asynchronously set the pipeline to Playing
+    //     self.pipeline.call_async(|pipeline| {
+    //         // If this fails, post an error on the bus so we exit
+    //         if pipeline.set_state(gst::State::Playing).is_err() {
+    //             gst::element_error!(
+    //                 pipeline,
+    //                 gst::LibraryError::Failed,
+    //                 ("Failed to set pipeline to Playing")
+    //             );
+    //         }
+    //     });
+
+    //     gw.run().await?;
+    //     Ok(())
+    // }
 
     pub async fn run(&self) -> Result<(), anyhow::Error> {
         let bin = self.pipeline.clone().upcast::<gst::Bin>();
@@ -188,16 +240,48 @@ fn check_plugins() -> Result<(), anyhow::Error> {
     }
 }
 
-async fn async_main() -> Result<(), anyhow::Error> {
+async fn async_main(url: String) -> Result<(), anyhow::Error> {
     gst::init()?;
     check_plugins()?;
-    let app = App::new()?;
+    let app = App::new(url)?;
     app.run().await?;
     Ok(())
 }
 
 fn main() -> Result<(), anyhow::Error> {
     env_logger::init();
+    let args = Args::from_args();
+    println!("{:?}", args);
+    let url = args.feed_id;
+    println!("URL: {}", url);
     let main_context = glib::MainContext::default();
-    main_context.block_on(async_main())
+    main_context.block_on(async_main(url))
 }
+
+// async fn async_main(url: String) {
+//     println!("XXXXXXXXXXXXXXXXX Start cam: {}", url);
+//     gst::init().unwrap();
+//     check_plugins().unwrap();
+//     let app = App::new(url.clone()).unwrap();
+//     app.run(url).await.unwrap();
+// }
+
+// fn main() {
+//     env_logger::init();
+//     // let main_context = glib::MainContext::default();
+//     // main_context.block_on(async_main())
+//     let urls = [
+//         "rtsp://10.50.13.252/1/h264major",
+//         "rtsp://10.50.13.253/1/h264major",
+//         "rtsp://10.50.13.254/1/h264major",
+//     ];
+//     for url in urls {
+//         let url = url.to_owned();
+//         std::thread::spawn(async move || {
+//             async_main(url).await;
+//         }
+//         );
+//     }
+
+//     loop {}
+// }

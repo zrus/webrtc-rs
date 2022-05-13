@@ -23,4 +23,5 @@ glib = "0.14"
 gio = "0.14"
 log = "0.4.8"
 env_logger = "0.7.1"
-
+tokio = { version = "*", features = ["full"] }
+tokio-util = { version = "*", features = ["full"] }
