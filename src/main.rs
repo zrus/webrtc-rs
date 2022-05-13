@@ -74,20 +74,20 @@ impl App {
         //         .to_string(),
         // )?;
 
-        // let pipeline = gst::parse_launch(
-        //     &"webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302 \
-        //     rtspsrc location=rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4 ! queue ! capsfilter caps=\"application/x-rtp,pt=96,clock-rate=90000,media=video,encodeing-name=VP8\" ! \
-        //     rtpvp8depay ! vp8dec ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! vp8enc target-bitrate=100000 overshoot=25 undershoot=100 deadline=33000 keyframe-max-dist=1 ! \
-        //     rtpvp8pay picture-id-mode=2 ! queue ! capsfilter caps=\"application/x-rtp,pt=96,clock-rate=90000,media=video,encoding-name=VP8\" ! sendrecv."
-        //         .to_string(),
-        // )?;
-
         let pipeline = gst::parse_launch(
-            &"webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302
-            videotestsrc pattern=ball ! video/x-raw,width=640,height=480 ! videoconvert ! queue !
-            vp8enc target-bitrate=100000 overshoot=25 undershoot=100 deadline=33000 keyframe-max-dist=1 ! rtpvp8pay picture-id-mode=2 ! queue ! application/x-rtp,media=video,encoding-name=VP8,payload=96 ! sendrecv."
-            .to_string(),
+            &"webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302 \
+            rtspsrc location=rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4 ! queue ! capsfilter caps=\"application/x-rtp,pt=96,clock-rate=90000,media=video,encodeing-name=VP8\" ! \
+            rtpvp8depay ! vp8dec ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! vp8enc target-bitrate=100000 overshoot=25 undershoot=100 deadline=33000 keyframe-max-dist=1 ! \
+            rtpvp8pay picture-id-mode=2 ! queue ! capsfilter caps=\"application/x-rtp,pt=96,clock-rate=90000,media=video,encoding-name=VP8\" ! sendrecv."
+                .to_string(),
         )?;
+
+        // let pipeline = gst::parse_launch(
+        //     &"webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302
+        //     videotestsrc pattern=ball ! video/x-raw,width=640,height=480 ! videoconvert ! queue !
+        //     vp8enc target-bitrate=100000 overshoot=25 undershoot=100 deadline=33000 keyframe-max-dist=1 ! rtpvp8pay picture-id-mode=2 ! queue ! application/x-rtp,media=video,encoding-name=VP8,payload=96 ! sendrecv."
+        //     .to_string(),
+        // )?;
 
 
         let pipeline = pipeline
