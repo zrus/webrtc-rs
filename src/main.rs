@@ -92,12 +92,19 @@ impl App {
         //         .to_string(),
         // )?;
 
-        let pipeline = gst::parse_launch(
-            &"webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302
-            videotestsrc pattern=ball ! video/x-raw,width=640,height=480 ! videoconvert ! queue !
-            vp8enc target-bitrate=100000 overshoot=25 undershoot=100 deadline=33000 keyframe-max-dist=1 ! rtpvp8pay picture-id-mode=2 ! queue ! application/x-rtp,media=video,encoding-name=VP8,payload=96 ! sendrecv."
-            .to_string(),
-        )?;
+        //let pipeline = gst::parse_launch(
+        //    &"webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302
+        //    videotestsrc pattern=ball ! video/x-raw,width=640,height=480 ! videoconvert ! queue !
+        //    vp8enc target-bitrate=100000 overshoot=25 undershoot=100 deadline=33000 keyframe-max-dist=1 ! rtpvp8pay p
+        //    .to_string(),
+        //)?;
+
+       let pipeline = gst::parse_launch(
+             &"webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302
+             videotestsrc pattern=ball ! video/x-raw,width=640,height=480 ! videoconvert ! queue !
+             x264enc ! rtph264pay ! queue ! application/x-rtp,media=video,encoding-name=H264,payload=96 ! sendrecv."
+             .to_string(),
+         )?;
 
 
         let pipeline = pipeline
