@@ -90,9 +90,9 @@ pub struct Args {
     server: String,
     #[structopt(short, long, default_value = "1234")]
     room_id: u32,
-    #[structopt(short, long, default_value = "1234")]
-    pub feed_id: String,
-    #[structopt(short, long, default_value = "h264")]
+    #[structopt(short, long, default_value = "12345")]
+    pub feed_id: String,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+    #[structopt(short, long, default_value = "vp8")]
     webrtc_video_codec: VideoParameter,
 }
 
@@ -128,9 +128,10 @@ struct PluginHolder {
 
 #[derive(Serialize, Deserialize, Debug)]
 struct IceHolder {
-    candidate: String,
+    candidate: Option<String>,
     #[serde(rename = "sdpMLineIndex")]
-    sdp_mline_index: u32,
+    sdp_mline_index: Option<u32>,
+    completed: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -149,6 +150,7 @@ struct JsonReply {
     #[serde(rename = "plugindata")]
     plugin_data: Option<PluginHolder>,
     jsep: Option<JsepHolder>,
+    candidate: Option<IceHolder>,
 }
 
 fn transaction_id() -> String {
@@ -290,7 +292,7 @@ impl Peer {
     fn extract_ice_from_sdp(&self, sdp: &str) -> Result<(), anyhow::Error>  {
         let mut mlineindex = -1;
         let sdp = sdp.to_owned();
-        println!("Extract ice from sdp: {}", sdp);
+        // println!("Extract ice from sdp: {}", sdp);
         let tokens = sdp.lines().collect::<Vec<&str>>();
         for line in tokens {
             if line.starts_with("a=candidate") {
@@ -508,7 +510,7 @@ impl JanusGateway {
             .by_name("sendrecv")
             .expect("can't find webrtcbin");
 
-        // webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
+        webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
 
         if let Some(transceiver) = webrtcbin.emit_by_name("get-transceiver", &[&0.to_value()]).unwrap().and_then(|val| val.get::<glib::Object>().ok()) {
             transceiver.set_property("do-nack", &false.to_value())?;
@@ -650,7 +652,7 @@ impl JanusGateway {
             return peer.handle_sdp(&jsep.type_, sdp);
         } else if let Some(ice) = &jsep.ice {
             let peer = self.peer.lock().expect("Invalid peer");
-            return peer.handle_ice(ice.sdp_mline_index, &ice.candidate);
+            return peer.handle_ice(ice.sdp_mline_index.unwrap(), &(ice.candidate.as_ref().unwrap()));
         }
 
         Ok(())
@@ -658,7 +660,7 @@ impl JanusGateway {
 
     // Handle WebSocket messages, both our own as well as WebSocket protocol messages
     fn handle_websocket_message(&self, msg: &str) -> Result<(), anyhow::Error> {
-        // println!("Incoming raw message: {}", msg);
+        println!("Incoming raw message: {}", msg);
         let json_msg: JsonReply = serde_json::from_str(msg)?;
         let payload_type = &json_msg.base.janus;
         if payload_type == "ack" {
@@ -667,6 +669,15 @@ impl JanusGateway {
                 json_msg.base.transaction,
                 json_msg.base.session_id
             );
+        } else if payload_type == "trickle" {
+            println!("Incoming JSON WebSocket message Trickle: {:#?}", json_msg);
+            let ice = json_msg.candidate.unwrap();
+            println!("Trickle candidate: {:?}", ice);
+            let peer = self.peer.lock().expect("Invalid peer");
+            if ice.candidate.is_some() && ice.sdp_mline_index.is_some() {
+                peer.webrtcbin
+                    .emit_by_name("add-ice-candidate", &[&ice.sdp_mline_index.unwrap(), &ice.candidate.unwrap()])?;
+            }
         } else {
             println!("Incoming JSON WebSocket message: {:#?}", json_msg);
         }
