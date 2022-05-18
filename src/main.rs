@@ -79,13 +79,13 @@ impl App {
         //)?;
 
         //RTSP H264
-        let pipeline = gst::parse_launch(
-            &format!("webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302 \
-            rtspsrc location={} ! queue ! \
-            rtph264depay ! avdec_h264 ! videoconvert ! x264enc tune=zerolatency bitrate=1024 ! \
-            rtph264pay ! queue ! capsfilter caps=\"application/x-rtp,pt=96,clock-rate=90000,media=video,encoding-name=H264\" ! sendrecv."
-                , url.as_str())
-        )?;
+        //let pipeline = gst::parse_launch(
+        //    &format!("webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302 \
+        //    rtspsrc location={} ! queue ! \
+        //   rtph264depay ! avdec_h264 ! videoconvert ! x264enc tune=zerolatency bitrate=1024 ! \
+        //    rtph264pay ! queue ! capsfilter caps=\"application/x-rtp,pt=96,clock-rate=90000,media=video,encoding-name=H264\" ! sendrecv."
+        //        , url.as_str())
+        //)?;
 
         //RTSP H264 to VP8
         // let pipeline = gst::parse_launch(
@@ -105,12 +105,12 @@ impl App {
         //    .to_string(),
         // )?;
 
-    //    let pipeline = gst::parse_launch(
-    //          &"webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302 \
-    //          videotestsrc pattern=ball ! video/x-raw,width=640,height=480 ! videoconvert ! queue !
-    //          x264enc ! rtph264pay ! queue ! application/x-rtp,media=video,encoding-name=H264,payload=96 ! sendrecv."
-    //          .to_string(),
-    //      )?;
+        let pipeline = gst::parse_launch(
+              &"webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302 \
+              videotestsrc pattern=ball ! video/x-raw,width=640,height=480 ! videoconvert ! queue !
+              x264enc ! rtph264pay ! queue ! application/x-rtp,media=video,encoding-name=H264,payload=96 ! sendrecv."
+              .to_string(),
+          )?;
 
 
         let pipeline = pipeline
@@ -238,7 +238,7 @@ fn check_plugins() -> Result<(), anyhow::Error> {
         "videotestsrc",
         "videoconvert",
         "autodetect",
-        "vpx",
+        //"vpx",
         "webrtc",
         "nice",
         "dtls",
