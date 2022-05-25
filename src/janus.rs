@@ -512,10 +512,16 @@ impl JanusGateway {
             .expect("can't find webrtcbin");
 
         webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
+	//let direction = gst_webrtc::WebRTCRTPTransceiverDirection::Sendonly;
+        //let caps = gst::Caps::new_empty();
+        //webrtcbin
+        //    .emit_by_name("add-transceiver", &[&direction, &caps])
+        //    .expect("couldn't add transceiver to pipeline");
 
         if let Some(transceiver) = webrtcbin.emit_by_name("get-transceiver", &[&0.to_value()]).unwrap().and_then(|val| val.get::<glib::Object>().ok()) {
-            transceiver.set_property("do-nack", &false.to_value())?;
-        }
+            //transceiver.set_property("do-nack", &false.to_value())?;
+		transceiver.set_property("direction", &gst_webrtc::WebRTCRTPTransceiverDirection::Sendonly.to_value())?;
+       }
 
         let (send_ws_msg_tx, send_ws_msg_rx) = mpsc::unbounded::<WsMessage>();
 
